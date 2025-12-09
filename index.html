@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Ambulance Alert and Road Safety System</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Routing Machine JS -->
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+</head>
+<body data-color-scheme="light">
+    <!-- Dark/Light Mode Toggle -->
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
+    <!-- Navigation -->
+    <nav class="navbar glassmorphic">
+        <div class="container flex justify-between items-center">
+            <div class="nav-brand">
+                <h2>🚑 Smart Ambulance Alert & Road Safety System</h2>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-links flex gap-16 items-center">
+                    <a href="#home" class="nav-link" onclick="showPage('home')">Home</a>
+                    <button id="logout-btn" class="btn btn--outline hidden" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Emergency Banner -->
+    <div id="emergency-banner" class="emergency-banner hidden">
+        <div class="emergency-content">
+            <span class="emergency-icon">🚨</span>
+            <span class="emergency-text">Emergency Route Active — Priority Corridor Established</span>
+            <button id="stop-emergency" class="btn btn--sm btn--outline" onclick="stopEmergency()">Stop Emergency</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Home Page -->
+        <section id="home-page" class="page active">
+            <div class="container">
+                <!-- Hero Section -->
+                <div class="hero">
+                    <div class="hero-content">
+                        <h1 class="hero-title animated-title">Smart Ambulance Alert and Road Safety System</h1>
+                        <p class="hero-subtitle">Supporting SDG 11 – Sustainable Cities & Communities</p>
+                        <p class="hero-description">
+                            An intelligent emergency response system that coordinates ambulance dispatch, 
+                            optimizes routes, and ensures rapid medical assistance through government oversight, 
+                            hospital management, and driver navigation integration.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Portal Cards -->
+                <div class="portal-cards">
+                    <div class="portal-card glassmorphic" onclick="showPage('government-login')">
+                        <span class="portal-icon">🏛️</span>
+                        <h3>Government Portal</h3>
+                        <p>Manage hospital registrations and approvals. Monitor system oversight and ensure compliance with emergency response protocols.</p>
+                        <button class="btn btn--primary btn--full-width">Access Portal</button>
+                    </div>
+                    
+                    <div class="portal-card glassmorphic" onclick="showPage('hospital-login')">
+                        <span class="portal-icon">🏥</span>
+                        <h3>Hospital Portal</h3>
+                        <p>Register hospitals and manage ambulance drivers. Coordinate emergency response and maintain driver databases.</p>
+                        <button class="btn btn--primary btn--full-width">Access Portal</button>
+                    </div>
+                    
+                    <div class="portal-card glassmorphic" onclick="showPage('driver-login')">
+                        <span class="portal-icon">🚑</span>
+                        <h3>Driver Portal</h3>
+                        <p>Navigate emergency routes with real-time alerts. Access turn-by-turn directions and emergency signal controls.</p>
+                        <button class="btn btn--primary btn--full-width">Access Portal</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Government Login -->
+        <section id="government-login" class="page">
+            <div class="container">
+                <div class="login-container">
+                    <div class="login-card card glassmorphic">
+                        <div class="card__body">
+                            <h2 class="login-title">🏛️ Government Login</h2>
+                            <form id="government-login-form">
+                                <div class="form-group">
+                                    <label class="form-label">Username</label>
+                                    <input type="text" name="username" class="form-input" placeholder="Enter username" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-input" placeholder="Enter password" required>
+                                </div>
+                                <button type="submit" class="btn btn--primary btn--full-width">Login</button>
+                                <p class="text-center" style="margin-top: 1rem; color: var(--color-text-muted); font-size: 0.875rem;">
+                                    Demo: admin / 1234
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Government Dashboard -->
+        <section id="government-dashboard" class="page">
+            <div class="container">
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">Government Dashboard</h1>
+                    <p class="dashboard-subtitle">Hospital Registration Management</p>
+                </div>
+                
+                <!-- Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card card glassmorphic">
+                        <div class="stat-value" id="total-requests">0</div>
+                        <div class="stat-label">Total Requests</div>
+                    </div>
+                    <div class="stat-card card glassmorphic">
+                        <div class="stat-value" id="approved-hospitals">0</div>
+                        <div class="stat-label">Approved</div>
+                    </div>
+                    <div class="stat-card card glassmorphic">
+                        <div class="stat-value" id="pending-requests">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                </div>
+
+                <!-- Hospital Requests Table -->
+                <div class="table-container card glassmorphic">
+                    <div class="card__header">
+                        <h3>Hospital Registration Requests</h3>
+                    </div>
+                    <div class="card__body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Hospital Name</th>
+                                    <th>Registration No.</th>
+                                    <th>Address</th>
+                                    <th>Contact</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hospital-requests-tbody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hospital Login -->
+        <section id="hospital-login" class="page">
+            <div class="container">
+                <div class="login-container">
+                    <div class="login-card card glassmorphic">
+                        <div class="card__body">
+                            <h2 class="login-title">🏥 Hospital Login</h2>
+                            <form id="hospital-login-form">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="email" class="form-input" placeholder="Enter hospital email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-input" placeholder="Enter password" required>
+                                </div>
+                                <button type="submit" class="btn btn--primary btn--full-width">Login</button>
+                            </form>
+                            <div class="text-center" style="margin-top: 1.5rem;">
+                                <p>Need to register your hospital?</p>
+                                <button class="btn btn--secondary" onclick="showPage('hospital-register')">Register Hospital</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hospital Registration -->
+        <section id="hospital-register" class="page">
+            <div class="container">
+                <div class="login-container">
+                    <div class="login-card card glassmorphic" style="max-width: 600px;">
+                        <div class="card__body">
+                            <h2 class="login-title">🏥 Hospital Registration</h2>
+                            <form id="hospital-register-form">
+                                <div class="form-group">
+                                    <label class="form-label">Hospital Name</label>
+                                    <input type="text" name="name" class="form-input" placeholder="Enter hospital name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Registration Number</label>
+                                    <input type="text" name="regNo" class="form-input" placeholder="Enter registration number" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Address</label>
+                                    <textarea name="address" class="form-input" rows="3" placeholder="Enter hospital address" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Contact Number</label>
+                                    <input type="tel" name="contact" class="form-input" placeholder="Enter contact number" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="email" class="form-input" placeholder="Enter hospital email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-input" placeholder="Create password" required>
+                                </div>
+                                <button type="submit" class="btn btn--primary btn--full-width">Submit Registration</button>
+                            </form>
+                            <div class="text-center" style="margin-top: 1rem;">
+                                <button class="btn btn--outline" onclick="showPage('hospital-login')">Back to Login</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hospital Dashboard -->
+        <section id="hospital-dashboard" class="page">
+            <div class="container">
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">Hospital Dashboard</h1>
+                    <p class="dashboard-subtitle" id="hospital-name">Hospital Management System</p>
+                </div>
+                
+                <!-- Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-card card glassmorphic">
+                        <div class="stat-value" id="total-drivers">0</div>
+                        <div class="stat-label">Total Drivers</div>
+                    </div>
+                    <div class="stat-card card glassmorphic">
+                        <div class="stat-value" id="active-ambulances">0</div>
+                        <div class="stat-label">Active Ambulances</div>
+                    </div>
+                </div>
+
+                <!-- Add Driver Form -->
+                <div class="card glassmorphic" style="margin-bottom: 2rem;">
+                    <div class="card__header">
+                        <h3>Add New Driver</h3>
+                    </div>
+                    <div class="card__body">
+                        <form id="add-driver-form" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Driver Name</label>
+                                <input type="text" name="name" class="form-input" placeholder="Enter driver name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Driver ID</label>
+                                <input type="text" name="driverId" class="form-input" placeholder="Enter driver ID" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" name="password" class="form-input" placeholder="Create password" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email (Optional)</label>
+                                <input type="email" name="email" class="form-input" placeholder="Enter driver email">
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: end;">
+                                <button type="submit" class="btn btn--primary">Add Driver</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Drivers Table -->
+                <div class="table-container card glassmorphic">
+                    <div class="card__header">
+                        <h3>Registered Drivers</h3>
+                    </div>
+                    <div class="card__body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Driver Name</th>
+                                    <th>Driver ID</th>
+                                    <th>Email</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="drivers-tbody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Driver Login -->
+        <section id="driver-login" class="page">
+            <div class="container">
+                <div class="login-container">
+                    <div class="login-card card glassmorphic">
+                        <div class="card__body">
+                            <h2 class="login-title">🚑 Driver Login</h2>
+                            <form id="driver-login-form">
+                                <div class="form-group">
+                                    <label class="form-label">Driver ID</label>
+                                    <input type="text" name="driverId" class="form-input" placeholder="Enter your driver ID" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" name="password" class="form-input" placeholder="Enter your password" required>
+                                </div>
+                                <button type="submit" class="btn btn--primary btn--full-width">Login</button>
+                                <p class="text-center" style="margin-top: 1rem; color: var(--color-text-muted); font-size: 0.875rem;">
+                                    Demo: DRV001 / driver123
+                                </p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Driver Dashboard -->
+        <section id="driver-dashboard" class="page">
+            <div class="container">
+                <div class="dashboard-header">
+                    <h1 class="dashboard-title">Driver Navigation</h1>
+                    <p class="dashboard-subtitle" id="driver-name">Emergency Route System</p>
+                </div>
+                
+                <!-- Navigation Controls -->
+                <div class="navigation-controls card glassmorphic" style="margin-bottom: 2rem;">
+                    <div class="card__body">
+                        <div class="grid" style="grid-template-columns: 1fr 1fr auto auto auto; gap: 1rem; align-items: end;">
+                            <div class="form-group">
+                                <label class="form-label">Destination Hospital</label>
+                                <select id="destination-select" class="form-select">
+                                    <option value="">Select Hospital</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Route Information</label>
+                                <div style="display: flex; gap: 1rem;">
+                                    <span id="distance-info" class="info-badge">--</span>
+                                    <span id="eta-info" class="info-badge">--</span>
+                                </div>
+                            </div>
+                            <button id="start-navigation" class="btn btn--success" disabled>
+                                🧭 Start Emergency Navigation
+                            </button>
+                            <button id="trigger-emergency" class="btn btn--warning">
+                                🚨 Trigger Signal
+                            </button>
+                            <button id="open-google-maps" class="btn btn--secondary" disabled>
+                                🗺️ Open in Google Maps
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map Container -->
+                <div class="map-container card glassmorphic">
+                    <div id="map" style="height: 500px; width: 100%; border-radius: inherit;"></div>
+                </div>
+                
+                <!-- Download App Button (appears after login) -->
+                <div class="text-center" style="margin-top: 2rem;">
+                    <button class="btn btn--primary btn--lg">
+                        📱 Download Driver App
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>Developed for Hackathon 2025</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
